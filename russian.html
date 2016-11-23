@@ -1,0 +1,209 @@
+<html>
+	<head>
+		<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+	</head>
+	<body>
+		<table id="chessboard" onclick="handleClick(event)">
+		    <tbody>
+		        <tr>
+		            <td id="a1"></td><td id="b1"></td><td id="c1"></td><td id="d1"></td><td id="e1"></td><td id="f1"></td><td id="g1"></td><td id="h1"></td>
+		        </tr>
+		        <tr>
+		            <td id="a2"></td><td id="b2"></td><td id="c2"></td><td id="d2"></td><td id="e2"></td><td id="f2"></td><td id="g2"></td><td id="h2"></td>
+		        </tr>
+		        <tr>
+		            <td id="a3"></td><td id="b3"></td><td id="c3"></td><td id="d3"></td><td id="e3"></td><td id="f3"></td><td id="g3"></td><td id="h3"></td>
+		        </tr>
+		        <tr>
+		            <td id="a4"></td><td id="b4"></td><td id="c4"></td><td id="d4"></td><td id="e4"></td><td id="f4"></td><td id="g4"></td><td id="h4"></td>
+		        </tr>
+		        <tr>
+		            <td id="a5"></td><td id="b5"></td><td id="c5"></td><td id="d5"></td><td id="e5"></td><td id="f5"></td><td id="g5"></td><td id="h5"></td>
+		        </tr>
+		        <tr>
+		            <td id="a6"></td><td id="b6"></td><td id="c6"></td><td id="d6"></td><td id="e6"></td><td id="f6"></td><td id="g6"></td><td id="h6"></td>
+		        </tr>
+		        <tr>
+		            <td id="a7"></td><td id="b7"></td><td id="c7"></td><td id="d7"></td><td id="e7"></td><td id="f7"></td><td id="g7"></td><td id="h7"></td>
+		        </tr>
+		        <tr>
+		            <td id="a8"></td><td id="b8"></td><td id="c8"></td><td id="d8"></td><td id="e8"></td><td id="f8"></td><td id="g8"></td><td id="h8"></td>
+		        </tr>
+		    </tbody>
+		</table>
+	</body>
+</html>
+
+<style>
+	body {
+	  background: #f2f2e1;
+	  width: 100%;
+	}
+	td {
+	    width: 50px;
+	    height: 50px;
+	    text-align: center;
+	    line-height: 50px;
+	}
+	tr:nth-child(even)>td:nth-child(odd){
+		background-color: #57aa6a;
+	}
+	tr:nth-child(even)>td:nth-child(even){
+		background-color: #f2f2e1;
+	}
+	tr:nth-child(odd)>td:nth-child(odd){
+		background-color: #f2f2e1;
+	}
+	tr:nth-child(odd)>td:nth-child(even){
+		background-color: #57aa6a;
+	}
+	#chessboard {
+	    border-collapse: collapse;
+	    margin: 0 auto;
+	    border: 3px solid #57aa6a;
+	}
+	img {
+		height: 48px;
+	}
+</style>
+
+<script>
+
+	$(function() {
+	    initiateTable();
+	});
+
+	// Declaring ticks of the checkers game table.
+	var horizontalTicks = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+	var verticalTicks = ['1', '2', '3', '4', '5', '6', '7', '8'];
+
+	// White coordinates and path to image.
+	var whiteCoordinates =  ['a8', 'c8', 'e8', 'g8', 'b7', 'd7', 'f7', 'h7', 'a6', 'c6', 'e6', 'g6'];
+	var whitePath = '1';
+
+	// Red coordinates and path to image.
+	var redCoordinates = ['a2', 'c2', 'e2', 'g2', 'b1', 'd1', 'f1', 'h1', 'b3', 'd3', 'f3', 'h3'];
+	var redPath = '2';
+
+	// An array that are used in controlling unnecessary stylings.
+	var styledElements = [];
+
+	// Get coordinate and insert images.
+	function insertImage(coordinate, pngPath){
+		var img = new Image();
+		var div = document.getElementById(coordinate);
+
+		img.onload = function() {
+		  div.appendChild(img);
+		};
+
+		img.src = 'img/' + pngPath + '.png';
+	}
+
+	// On game start, insert images to checkers table.
+	function initiateTable(){
+		for(var i=0; i < whiteCoordinates.length; i++){
+			insertImage(whiteCoordinates[i], whitePath);
+			insertImage(redCoordinates[i], redPath);
+		}
+	}
+
+	// Listens for click events, then sends clicked cell info to relevant function.
+	function handleClick(e) {
+		
+		// Call decider function.
+		decideWhereToMove(e.target);
+	}
+
+	//
+	function clearStyling(){
+
+		// For each styled element, clear styling.
+		for(var i=0; i<styledElements.length; i++){
+			document.getElementById(styledElements[i]).removeAttribute("style");
+		}
+	}
+
+	// Do necessary checks for the clicked cell and decide where to move.
+	function decideWhereToMove(clickedCell){
+		
+		// Be sure that there is no styling on the table.
+		clearStyling();
+
+		// If clicked cell is an image element, then do apply decision phases. 
+		if ( $(clickedCell).is('img') ){
+
+			// Get image parents id and images src value.
+			var imgCoordinate = $(clickedCell).parent().attr("id");
+			var imgPath = $(clickedCell).attr("src");
+
+			// Find possible moves for this cell.
+			var regularPossibleMoves = getRegularPossibleMoves(imgCoordinate, imgPath);
+
+			// Check if these move suggestions are avaible.
+			checkedPossibleMoves(regularPossibleMoves, imgPath);
+
+			// Manipulate each cell that is suggested as a possible move.
+			for(var i=0; i<regularPossibleMoves.length; i++){
+				document.getElementById(regularPossibleMoves[i]).style.border = "1px solid #000";
+				styledElements.push(regularPossibleMoves[i]);
+			}
+		}
+		// If clicked cell is not an image element, just clear stylings on table.
+		else{
+			clearStyling();
+		}
+	}
+
+	// Declare possible coordinates to move for each given coordinate-color.
+	function getRegularPossibleMoves(coordinate, path){
+
+		var coordinateHorizontal = horizontalTicks.indexOf(coordinate.slice(0,1));
+		var coordinateVertical = verticalTicks.indexOf(coordinate.slice(1,2));
+		var result = [];
+		if(path == 'img/1.png'){
+			if (coordinateHorizontal == 0){
+				result =  [horizontalTicks[coordinateHorizontal+1] + verticalTicks[coordinateVertical-1]];
+			}
+			else if(coordinateHorizontal == 7){
+				result = [horizontalTicks[coordinateHorizontal-1] + verticalTicks[coordinateVertical-1]];
+			}
+			else{
+				result = [horizontalTicks[coordinateHorizontal-1] + verticalTicks[coordinateVertical-1], horizontalTicks[coordinateHorizontal+1] + verticalTicks[coordinateVertical-1]];
+			}
+		}
+		else{
+			if (coordinateHorizontal == 0){
+				result =  [horizontalTicks[coordinateHorizontal+1] + verticalTicks[coordinateVertical+1]];
+			}
+			else if(coordinateHorizontal == 7){
+				result =  [horizontalTicks[coordinateHorizontal-1] + verticalTicks[coordinateVertical+1]];
+			}
+			else{
+				result = [horizontalTicks[coordinateHorizontal-1] + verticalTicks[coordinateVertical+1], horizontalTicks[coordinateHorizontal+1] + verticalTicks[coordinateVertical+1]];
+			}
+		}
+		return result;
+	}
+
+	// Check if there is an opponent soldier in the cell that you are about to move.
+	function checkedPossibleMoves(regularPossibleMoves, imgPath){
+		
+		for(var i=0; i<regularPossibleMoves.length; i++){
+			var element = document.getElementById(regularPossibleMoves[i]);
+			console.log(element);
+			if ( $(element).has('img') ){
+				if ( element.child().attr("src") == 'imgPath' ){
+					console.log('aynı renk');
+				}
+				else{
+					console.log('farklı renk');
+				}
+			}
+			else{
+				console.log('boş bura');
+			}
+		}
+		
+	}
+</script>
