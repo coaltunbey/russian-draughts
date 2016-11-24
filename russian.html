@@ -190,10 +190,11 @@
 	function checkedPossibleMoves(regularPossibleMoves, imgPath){
 		
 		for(var i=0; i<regularPossibleMoves.length; i++){
+
 			var element = document.getElementById(regularPossibleMoves[i]);
-			console.log(element);
-			if ( $(element).has('img') ){
-				if ( element.child().attr("src") == 'imgPath' ){
+
+			if ( $(element).find('img').length > 0 ){
+				if ( $(element).find('img').attr("src").indexOf(imgPath) !== -1 ){
 					console.log('aynı renk');
 				}
 				else{
