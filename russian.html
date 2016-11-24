@@ -79,14 +79,19 @@
 
 	// White coordinates and path to image.
 	var whiteCoordinates =  ['a8', 'c8', 'e8', 'g8', 'b7', 'd7', 'f7', 'h7', 'a6', 'c6', 'e6', 'g6'];
-	var whitePath = '1';
+	var whitePath = 'img/1.png';
 
 	// Red coordinates and path to image.
 	var redCoordinates = ['a2', 'c2', 'e2', 'g2', 'b1', 'd1', 'f1', 'h1', 'b3', 'd3', 'f3', 'h3'];
-	var redPath = '2';
+	var redPath = 'img/2.png';
 
 	// An array that are used in controlling unnecessary stylings.
 	var styledElements = [];
+
+	// These variables ar used for controlling piece movements.
+	var lastClickedImageCoordinate;
+	var lastClickedImagePath;
+	var conqueredEnemyPiece;
 
 	// Get coordinate and insert images.
 	function insertImage(coordinate, pngPath){
@@ -97,7 +102,14 @@
 		  div.appendChild(img);
 		};
 
-		img.src = 'img/' + pngPath + '.png';
+		img.src = pngPath;
+	}
+
+	// Remove images from given coordinate
+	function removeImage(coordinate){
+		var coordinate = document.getElementById(coordinate);
+		var image = $(coordinate).find("img");
+		$(image).remove();
 	}
 
 	// On game start, insert images to checkers table.
@@ -122,35 +134,48 @@
 		for(var i=0; i<styledElements.length; i++){
 			document.getElementById(styledElements[i]).removeAttribute("style");
 		}
+		// Clear that array.
+		styledElements = [];
 	}
 
 	// Do necessary checks for the clicked cell and decide where to move.
 	function decideWhereToMove(clickedCell){
 		
-		// Be sure that there is no styling on the table.
-		clearStyling();
-
 		// If clicked cell is an image element, then do apply decision phases. 
 		if ( $(clickedCell).is('img') ){
+			// Be sure that there is no styling on the table.
+			clearStyling();
 
 			// Get image parents id and images src value.
 			var imgCoordinate = $(clickedCell).parent().attr("id");
 			var imgPath = $(clickedCell).attr("src");
 
+			// Store these variables in general variables.
+			lastClickedImageCoordinate = imgCoordinate;
+			lastClickedImagePath = imgPath;
+
 			// Find possible moves for this cell.
 			var regularPossibleMoves = getRegularPossibleMoves(imgCoordinate, imgPath);
 
 			// Check if these move suggestions are avaible.
-			checkedPossibleMoves(regularPossibleMoves, imgPath);
-
+			var checkedPossibleMoves = getCheckedPossibleMoves(regularPossibleMoves, imgPath, imgCoordinate);
+			
 			// Manipulate each cell that is suggested as a possible move.
-			for(var i=0; i<regularPossibleMoves.length; i++){
-				document.getElementById(regularPossibleMoves[i]).style.border = "1px solid #000";
-				styledElements.push(regularPossibleMoves[i]);
+			for(var i=0; i<checkedPossibleMoves.length; i++){
+				if ( checkedPossibleMoves[i] !== 'null'){
+					document.getElementById(checkedPossibleMoves[i]).style.border = "1px solid #000";
+					styledElements.push(checkedPossibleMoves[i]);
+				}
 			}
 		}
-		// If clicked cell is not an image element, just clear stylings on table.
+		// If clicked cell is not an image element, execute the following statements.
 		else{
+			var cellCoordinate = $(clickedCell).attr("id");
+			if ( $.inArray(cellCoordinate, styledElements) > -1 ){
+				insertImage(cellCoordinate, lastClickedImagePath);
+				removeImage(lastClickedImageCoordinate);
+				removeImage(conqueredEnemyPiece);
+			}
 			clearStyling();
 		}
 	}
@@ -187,24 +212,59 @@
 	}
 
 	// Check if there is an opponent soldier in the cell that you are about to move.
-	function checkedPossibleMoves(regularPossibleMoves, imgPath){
+	function getCheckedPossibleMoves(regularPossibleMoves, imgPath, currentCoordinate){
 		
+		var checkedPossibleMoves = [];
+
 		for(var i=0; i<regularPossibleMoves.length; i++){
 
 			var element = document.getElementById(regularPossibleMoves[i]);
 
 			if ( $(element).find('img').length > 0 ){
 				if ( $(element).find('img').attr("src").indexOf(imgPath) !== -1 ){
-					console.log('aynı renk');
+					checkedPossibleMoves[i] = 'null';
 				}
 				else{
-					console.log('farklı renk');
+					checkedPossibleMoves[i] = conquerEnemyPiece(currentCoordinate, regularPossibleMoves[i]);
+					conqueredEnemyPiece = regularPossibleMoves[i];
 				}
 			}
 			else{
-				console.log('boş bura');
+				checkedPossibleMoves[i] = regularPossibleMoves[i];
 			}
 		}
-		
+		return checkedPossibleMoves;
+	}
+
+	function conquerEnemyPiece(currentCoordinate, enemyCoordinate){
+		var result = '';
+
+		var currentCoordinateHorizontal = horizontalTicks.indexOf(currentCoordinate.slice(0,1));
+		var currentCoordinateVertical = verticalTicks.indexOf(currentCoordinate.slice(1,2));
+
+		var enemyCoordinateHorizontal = horizontalTicks.indexOf(enemyCoordinate.slice(0,1));
+		var enemyCoordinateVertical = verticalTicks.indexOf(enemyCoordinate.slice(1,2));
+
+		if (enemyCoordinateHorizontal == 0 || enemyCoordinateHorizontal == 7){
+			result = null;
+		}
+		else if(enemyCoordinateVertical == 0 || enemyCoordinateVertical == 7){
+			result = null;
+		}
+		else{
+			if(currentCoordinateHorizontal < enemyCoordinateHorizontal && currentCoordinateVertical < enemyCoordinateVertical){
+				result = horizontalTicks[enemyCoordinateHorizontal+1] + verticalTicks[enemyCoordinateVertical+1];
+			}
+			else if(currentCoordinateHorizontal > enemyCoordinateHorizontal && currentCoordinateVertical < enemyCoordinateVertical){
+				result = horizontalTicks[enemyCoordinateHorizontal-1] + verticalTicks[enemyCoordinateVertical+1];
+			}
+			else if(currentCoordinateHorizontal < enemyCoordinateHorizontal && currentCoordinateVertical > enemyCoordinateVertical){
+				result = horizontalTicks[enemyCoordinateHorizontal+1] + verticalTicks[enemyCoordinateVertical-1];
+			}
+			else{
+				result = horizontalTicks[enemyCoordinateHorizontal-1] + verticalTicks[enemyCoordinateVertical-1];
+			}
+		}
+		return result;
 	}
 </script>
