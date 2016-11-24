@@ -1,6 +1,7 @@
 <html>
 	<head>
 		<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 	</head>
 	<body>
 		<table id="chessboard" onclick="handleClick(event)">
@@ -31,6 +32,7 @@
 		        </tr>
 		    </tbody>
 		</table>
+		<div class="text-center text-success" id="text"></div>
 	</body>
 </html>
 
@@ -64,6 +66,9 @@
 	}
 	img {
 		height: 48px;
+	}
+	#text{
+		margin-top: 30px;
 	}
 </style>
 
@@ -143,30 +148,36 @@
 		
 		// If clicked cell is an image element, then do apply decision phases. 
 		if ( $(clickedCell).is('img') ){
+
 			// Be sure that there is no styling on the table.
 			clearStyling();
 
 			// Get image parents id and images src value.
 			var imgCoordinate = $(clickedCell).parent().attr("id");
 			var imgPath = $(clickedCell).attr("src");
+			if( imgPath == lastClickedImagePath){
+				document.getElementById('text').innerHTML = "<div class='col-md-4'></div><div class='col-md-4 alert alert-danger text-center'><strong>OOPS!</strong> OPPONENT'S TURN!</div><div class='col-md-4'></div ";
+			}
+			else{
+				// Store these variables in general variables.
+				lastClickedImageCoordinate = imgCoordinate;
+				lastClickedImagePath = imgPath;
 
-			// Store these variables in general variables.
-			lastClickedImageCoordinate = imgCoordinate;
-			lastClickedImagePath = imgPath;
+				// Find possible moves for this cell.
+				var regularPossibleMoves = getRegularPossibleMoves(imgCoordinate, imgPath);
 
-			// Find possible moves for this cell.
-			var regularPossibleMoves = getRegularPossibleMoves(imgCoordinate, imgPath);
-
-			// Check if these move suggestions are avaible.
-			var checkedPossibleMoves = getCheckedPossibleMoves(regularPossibleMoves, imgPath, imgCoordinate);
-			
-			// Manipulate each cell that is suggested as a possible move.
-			for(var i=0; i<checkedPossibleMoves.length; i++){
-				if ( checkedPossibleMoves[i] !== 'null'){
-					document.getElementById(checkedPossibleMoves[i]).style.border = "1px solid #000";
-					styledElements.push(checkedPossibleMoves[i]);
+				// Check if these move suggestions are avaible.
+				var checkedPossibleMoves = getCheckedPossibleMoves(regularPossibleMoves, imgPath, imgCoordinate);
+				
+				// Manipulate each cell that is suggested as a possible move.
+				for(var i=0; i<checkedPossibleMoves.length; i++){
+					if ( checkedPossibleMoves[i] !== 'null'){
+						document.getElementById(checkedPossibleMoves[i]).style.border = "1px solid #000";
+						styledElements.push(checkedPossibleMoves[i]);
+					}
 				}
 			}
+			
 		}
 		// If clicked cell is not an image element, execute the following statements.
 		else{
@@ -177,6 +188,7 @@
 				removeImage(conqueredEnemyPiece);
 			}
 			clearStyling();
+			document.getElementById('text').innerHTML = '';
 		}
 	}
 
