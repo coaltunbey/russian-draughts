@@ -177,15 +177,27 @@
 
 				// Find possible moves for this cell.
 				var regularPossibleMoves = getRegularPossibleMoves(imgCoordinate, imgPath);
-
-				// Check if these move suggestions are avaible.
+				var irregularPossibleMoves = getRegularPossibleMoves(imgCoordinate, imgPath, 1);
+				
+				// Apply some rules for suggested moves.
 				var checkedPossibleMoves = getCheckedPossibleMoves(regularPossibleMoves, imgPath, imgCoordinate);
-				console.log(checkedPossibleMoves);
+				var irCheckedPossibleMoves = getCheckedPossibleMoves(irregularPossibleMoves, imgPath, imgCoordinate, 1);
+				
+				if(checkedPossibleMoves['ignoreRegularMoves'] == 1){
+					var finalPossibleMoves = checkedPossibleMoves.concat(irCheckedPossibleMoves);
+				}
+				else if(irCheckedPossibleMoves.length > 0 && checkedPossibleMoves['ignoreRegularMoves'] !== 1){
+					var finalPossibleMoves = irCheckedPossibleMoves;
+				}
+				else{
+					var finalPossibleMoves = checkedPossibleMoves;
+				}
+
 				// Manipulate each cell that is suggested as a possible move.
-				for(var i=0; i<checkedPossibleMoves.length; i++){
-					if ( checkedPossibleMoves[i] !=  null){
-						document.getElementById(checkedPossibleMoves[i]).style.border = "1px solid #000";
-						styledElements.push(checkedPossibleMoves[i]);
+				for(var i=0; i<finalPossibleMoves.length; i++){
+					if ( finalPossibleMoves[i] !=  null){
+						document.getElementById(finalPossibleMoves[i]).style.border = "1px solid #000";
+						styledElements.push(finalPossibleMoves[i]);
 					}
 				}
 			}
@@ -207,11 +219,22 @@
 	}
 
 	// Declare possible coordinates to move for each given coordinate-color.
-	function getRegularPossibleMoves(coordinate, path){
+	function getRegularPossibleMoves(coordinate, path, irregular){
 
 		var coordinateHorizontal = horizontalTicks.indexOf(coordinate.slice(0,1));
 		var coordinateVertical = verticalTicks.indexOf(coordinate.slice(1,2));
 		var result = [];
+
+		// Required controls for reverse possible moves.
+		if(irregular == 1){
+			if(path == 'img/1.png'){
+				path = 'img/2.png';
+			}
+			else{
+				path = 'img/1.png';
+			}
+		}
+
 		if(path == 'img/1.png'){
 			if (coordinateHorizontal == 0){
 				result =  [horizontalTicks[coordinateHorizontal+1] + verticalTicks[coordinateVertical-1]];
@@ -238,10 +261,11 @@
 	}
 
 	// Check if there is an opponent soldier in the cell that you are about to move.
-	function getCheckedPossibleMoves(regularPossibleMoves, imgPath, currentCoordinate){
+	function getCheckedPossibleMoves(regularPossibleMoves, imgPath, currentCoordinate, isIrregular){
 		
 		var checkedPossibleMoves = [];
 		var conquerVal = [];
+		var irregularConquers = [];
 
 		for(var i=0; i<regularPossibleMoves.length; i++){
 
@@ -254,6 +278,9 @@
 				else{
 					checkedPossibleMoves[i] = conquerEnemyPiece(currentCoordinate, regularPossibleMoves[i]);
 					conquerVal.push(checkedPossibleMoves[i]);
+					if(isIrregular == 1){
+						irregularConquers.push(checkedPossibleMoves[i]);
+					}
 				}
 			}
 			else{
@@ -261,13 +288,21 @@
 			}
 		}
 
-		// If there is a chance to conquer an enemy piece, ignore other move possibilities.
-		if(conquerVal.length > 0 && isNan(conquerVal) == false){
-			return conquerVal;
+		// If irregular, just send the possible conquer moves.
+		if(isIrregular == 1){
+			return irregularConquers;
 		}
 		else{
-			return checkedPossibleMoves;
+			// If there is a chance to conquer an enemy piece, ignore other move possibilities.
+			if(conquerVal.length > 0 && isNan(conquerVal) == false){
+				conquerVal['ignoreRegularMoves'] = 1;
+				return conquerVal;
+			}
+			else{
+				return checkedPossibleMoves;
+			}
 		}
+		
 	}
 
 	function conquerEnemyPiece(currentCoordinate, enemyCoordinate){
