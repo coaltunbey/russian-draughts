@@ -217,11 +217,9 @@
 		else{
 			var cellCoordinate = $(clickedCell).attr("id");
 			if ( $.inArray(cellCoordinate, styledElements) > -1 ){
-				if(moveCounter == 0){
-					lastClickedImagePath = whitePath;
-				}
 				insertImage(cellCoordinate, lastClickedImagePath);
 				moveCounter++;
+				console.log(lastClickedImagePath);
 				removeImage(lastClickedImageCoordinate);
 				removeImage(conqueredEnemyPiece);
 
@@ -241,11 +239,11 @@
 
 		// Required controls for reverse possible moves.
 		if(irregular == 1){
-			if(path == 'img/1.png'){
-				path = 'img/2.png';
+			if(path == whitePath){
+				path = redPath;
 			}
 			else{
-				path = 'img/1.png';
+				path = whitePath;
 			}
 		}
 
