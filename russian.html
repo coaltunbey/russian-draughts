@@ -216,16 +216,23 @@
 		// If clicked cell is not an image element, execute the following statements.
 		else{
 			var cellCoordinate = $(clickedCell).attr("id");
+			// If clicked cell is in suggested moves to the followings.
 			if ( $.inArray(cellCoordinate, styledElements) > -1 ){
+				// Insert new image to the cell that clicked.
 				insertImage(cellCoordinate, lastClickedImagePath);
+				// Increment counter.
 				moveCounter++;
-				console.log(lastClickedImagePath);
+				// Remove old image.
 				removeImage(lastClickedImageCoordinate);
+				// Remove enemy if there is any.
 				removeImage(conqueredEnemyPiece);
 
 			}
+			// Clear styling on suggested moves.
 			clearStyling();
+			// Clear enemy piece variable.
 			conqueredEnemyPiece = undefined;
+			// Clear alert text.
 			document.getElementById('text').innerHTML = '';
 		}
 	}
@@ -316,7 +323,7 @@
 		}
 		
 	}
-
+	// Necessary controls: if there is another piece of enemy behind the piece that we're about to conquer, then don't suggest this.
 	function conquerEnemyPiece(currentCoordinate, enemyCoordinate){
 		var result = '';
 		
