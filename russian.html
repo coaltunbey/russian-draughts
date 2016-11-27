@@ -98,8 +98,9 @@
 
 	// These variables are used for controlling piece movements.
 	var lastClickedImageCoordinate;
-	var lastClickedImagePath;
+	var lastClickedImagePath; // White starts.
 	var conqueredEnemyPiece;
+	var moveCounter = 0;
 
 	// Get coordinate and insert images.
 	function insertImage(coordinate, pngPath){
@@ -167,8 +168,17 @@
 			// Get image parents id and images src value.
 			var imgCoordinate = $(clickedCell).parent().attr("id");
 			var imgPath = $(clickedCell).attr("src");
-			if( imgPath == lastClickedImagePath && imgCoordinate !== lastClickedImageCoordinate){
-				document.getElementById('text').innerHTML = "<div class='col-md-4'></div><div class='col-md-4 alert alert-danger text-center'><strong>OOPS!</strong> OPPONENT'S TURN!</div><div class='col-md-4'></div ";
+
+			if(moveCounter == 0){
+				var ifStatement = 'imgPath !== whitePath';
+				var innerHTMLText = "<div class='col-md-4'></div><div class='col-md-4 alert alert-danger text-center'><strong>OOPS!</strong> WHITE STARTS!</div><div class='col-md-4'></div ";
+			}
+			else{
+				var ifStatement = "imgPath == lastClickedImagePath";
+				var innerHTMLText = "<div class='col-md-4'></div><div class='col-md-4 alert alert-danger text-center'><strong>OOPS!</strong> OPPONENT'S TURN!</div><div class='col-md-4'></div ";
+			}
+			if( eval(ifStatement) ){
+				document.getElementById('text').innerHTML = innerHTMLText;
 			}
 			else{
 				// Store these variables in general variables.
@@ -207,7 +217,11 @@
 		else{
 			var cellCoordinate = $(clickedCell).attr("id");
 			if ( $.inArray(cellCoordinate, styledElements) > -1 ){
+				if(moveCounter == 0){
+					lastClickedImagePath = whitePath;
+				}
 				insertImage(cellCoordinate, lastClickedImagePath);
+				moveCounter++;
 				removeImage(lastClickedImageCoordinate);
 				removeImage(conqueredEnemyPiece);
 
