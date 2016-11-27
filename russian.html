@@ -1,7 +1,8 @@
 <html>
 	<head>
-		<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="js/jquery.min.js"></script>
+		<script src="js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="css/bootstrap.min.css">
 	</head>
 	<body>
 		<table id="chessboard" onclick="handleClick(event)">
@@ -85,21 +86,24 @@
 	// White coordinates and path to image.
 	var whiteCoordinates =  ['a8', 'c8', 'e8', 'g8', 'b7', 'd7', 'f7', 'h7', 'a6', 'c6', 'e6', 'g6'];
 	var whitePath = 'img/1.png';
+	var masterWhitePath = 'img/master1.png';
 
 	// Red coordinates and path to image.
 	var redCoordinates = ['a2', 'c2', 'e2', 'g2', 'b1', 'd1', 'f1', 'h1', 'b3', 'd3', 'f3', 'h3'];
 	var redPath = 'img/2.png';
+	var masterRedPath = 'img/master2.png';
 
 	// An array that are used in controlling unnecessary stylings.
 	var styledElements = [];
 
-	// These variables ar used for controlling piece movements.
+	// These variables are used for controlling piece movements.
 	var lastClickedImageCoordinate;
 	var lastClickedImagePath;
 	var conqueredEnemyPiece;
 
 	// Get coordinate and insert images.
 	function insertImage(coordinate, pngPath){
+		
 		var img = new Image();
 		var div = document.getElementById(coordinate);
 
@@ -107,7 +111,15 @@
 		  div.appendChild(img);
 		};
 
-		img.src = pngPath;
+		if( verticalTicks.indexOf(coordinate.slice(1,2)) == 0 && pngPath == whitePath ){
+			img.src = masterWhitePath;
+		}
+		else if( verticalTicks.indexOf(coordinate.slice(1,2)) == 7 && pngPath == redPath ){
+			img.src = masterRedPath;
+		}
+		else{
+			img.src = pngPath;
+		}
 	}
 
 	// Remove images from given coordinate
@@ -155,7 +167,7 @@
 			// Get image parents id and images src value.
 			var imgCoordinate = $(clickedCell).parent().attr("id");
 			var imgPath = $(clickedCell).attr("src");
-			if( imgPath == lastClickedImagePath){
+			if( imgPath == lastClickedImagePath && imgCoordinate !== lastClickedImageCoordinate){
 				document.getElementById('text').innerHTML = "<div class='col-md-4'></div><div class='col-md-4 alert alert-danger text-center'><strong>OOPS!</strong> OPPONENT'S TURN!</div><div class='col-md-4'></div ";
 			}
 			else{
@@ -171,7 +183,7 @@
 				
 				// Manipulate each cell that is suggested as a possible move.
 				for(var i=0; i<checkedPossibleMoves.length; i++){
-					if ( checkedPossibleMoves[i] !== 'null'){
+					if ( checkedPossibleMoves[i] !==  null){
 						document.getElementById(checkedPossibleMoves[i]).style.border = "1px solid #000";
 						styledElements.push(checkedPossibleMoves[i]);
 					}
@@ -227,6 +239,7 @@
 	function getCheckedPossibleMoves(regularPossibleMoves, imgPath, currentCoordinate){
 		
 		var checkedPossibleMoves = [];
+		var conquerVal = [];
 
 		for(var i=0; i<regularPossibleMoves.length; i++){
 
@@ -234,23 +247,30 @@
 
 			if ( $(element).find('img').length > 0 ){
 				if ( $(element).find('img').attr("src").indexOf(imgPath) !== -1 ){
-					checkedPossibleMoves[i] = 'null';
+					checkedPossibleMoves[i] = null;
 				}
 				else{
 					checkedPossibleMoves[i] = conquerEnemyPiece(currentCoordinate, regularPossibleMoves[i]);
-					conqueredEnemyPiece = regularPossibleMoves[i];
+					conquerVal[i] = checkedPossibleMoves[i];
 				}
 			}
 			else{
 				checkedPossibleMoves[i] = regularPossibleMoves[i];
 			}
 		}
-		return checkedPossibleMoves;
+		
+		// If there is a chance to conquer an enemy piece, ignore other move possibilities.
+		if(conquerVal.length > 0 && isNan(conquerVal) == false){
+			return conquerVal;
+		}
+		else{
+			return checkedPossibleMoves;
+		}
 	}
 
 	function conquerEnemyPiece(currentCoordinate, enemyCoordinate){
 		var result = '';
-
+		
 		var currentCoordinateHorizontal = horizontalTicks.indexOf(currentCoordinate.slice(0,1));
 		var currentCoordinateVertical = verticalTicks.indexOf(currentCoordinate.slice(1,2));
 
@@ -277,6 +297,24 @@
 				result = horizontalTicks[enemyCoordinateHorizontal-1] + verticalTicks[enemyCoordinateVertical-1];
 			}
 		}
-		return result;
+
+		// Check if the cell that current piece is about to move is empty or not. 
+		if(result !== null){	
+			
+			resultElement = document.getElementById(result);
+
+			if ( $(resultElement).find('img').length > 0 ){
+				return null;
+			}
+			else{
+				conqueredEnemyPiece = enemyCoordinate;
+				return result;
+			}
+		}
 	}
+
+	// Checks if an array contains full null variables.
+	function isNan(array){
+	    return array.join().replace(/,/g,'').length === 0;
+	};
 </script>
