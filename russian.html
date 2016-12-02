@@ -101,6 +101,7 @@
 	var lastClickedImagePath; // White starts.
 	var conqueredEnemyPiece;
 	var moveCounter = 0;
+	var lastMovedImage;
 
 	// Get coordinate and insert images.
 	function insertImage(coordinate, pngPath){
@@ -146,7 +147,7 @@
 	}
 
 	//
-	function clearStyling(){
+	function clearGlobalVariables(){
 
 		// For each styled element, clear styling.
 		for(var i=0; i<styledElements.length; i++){
@@ -154,6 +155,12 @@
 		}
 		// Clear that array.
 		styledElements = [];
+
+		// Clear enemy piece variable.
+		conqueredEnemyPiece = undefined;
+		
+		// Clear alert text.
+		document.getElementById('text').innerHTML = '';
 	}
 
 	// Do necessary checks for the clicked cell and decide where to move.
@@ -161,9 +168,6 @@
 		
 		// If clicked cell is an image element, then do apply decision phases. 
 		if ( $(clickedCell).is('img') ){
-
-			// Be sure that there is no styling on the table.
-			clearStyling();
 
 			// Get image parents id and images src value.
 			var imgCoordinate = $(clickedCell).parent().attr("id");
@@ -174,7 +178,7 @@
 				var innerHTMLText = "<div class='col-md-4'></div><div class='col-md-4 alert alert-danger text-center'><strong>OOPS!</strong> WHITE STARTS!</div><div class='col-md-4'></div ";
 			}
 			else{
-				var ifStatement = "imgPath == lastClickedImagePath";
+				var ifStatement = "imgPath == lastMovedImage";
 				var innerHTMLText = "<div class='col-md-4'></div><div class='col-md-4 alert alert-danger text-center'><strong>OOPS!</strong> OPPONENT'S TURN!</div><div class='col-md-4'></div ";
 			}
 
@@ -228,20 +232,16 @@
 				insertImage(cellCoordinate, lastClickedImagePath);
 				// Increment counter.
 				moveCounter++;
+				// Change last moved item.
+				lastMovedImage = lastClickedImagePath;
 				// Remove old image.
 				removeImage(lastClickedImageCoordinate);
 				// Remove enemy if there is any.
 				removeImage(conqueredEnemyPiece);
 
 			}
-			// Forget last clicked path.
-			lastClickedImagePath = '';
-			// Clear styling on suggested moves.
-			clearStyling();
-			// Clear enemy piece variable.
-			conqueredEnemyPiece = undefined;
-			// Clear alert text.
-			document.getElementById('text').innerHTML = '';
+			// Clear all global variables in order to calculate next moves without any error.
+			clearGlobalVariables();
 		}
 	}
 
