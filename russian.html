@@ -177,6 +177,7 @@
 				var ifStatement = "imgPath == lastClickedImagePath";
 				var innerHTMLText = "<div class='col-md-4'></div><div class='col-md-4 alert alert-danger text-center'><strong>OOPS!</strong> OPPONENT'S TURN!</div><div class='col-md-4'></div ";
 			}
+
 			if( eval(ifStatement) ){
 				document.getElementById('text').innerHTML = innerHTMLText;
 			}
@@ -185,24 +186,29 @@
 				lastClickedImageCoordinate = imgCoordinate;
 				lastClickedImagePath = imgPath;
 
-				// Find possible moves for this cell.
-				var regularPossibleMoves = getRegularPossibleMoves(imgCoordinate, imgPath);
-				var irregularPossibleMoves = getRegularPossibleMoves(imgCoordinate, imgPath, 1);
-				
-				// Apply some rules for suggested moves.
-				var checkedPossibleMoves = getCheckedPossibleMoves(regularPossibleMoves, imgPath, imgCoordinate);
-				var irCheckedPossibleMoves = getCheckedPossibleMoves(irregularPossibleMoves, imgPath, imgCoordinate, 1);
-				
-				if(checkedPossibleMoves['ignoreRegularMoves'] == 1){
-					var finalPossibleMoves = checkedPossibleMoves.concat(irCheckedPossibleMoves);
-				}
-				else if(irCheckedPossibleMoves.length > 0 && checkedPossibleMoves['ignoreRegularMoves'] !== 1){
-					var finalPossibleMoves = irCheckedPossibleMoves;
+				if(imgPath.indexOf('master') > -1){
+					var masterPossibleMoves = getMasterPossibleMoves(imgCoordinate);
+					var finalPossibleMoves = getCheckedPossibleMoves(masterPossibleMoves, imgPath, imgCoordinate);
 				}
 				else{
-					var finalPossibleMoves = checkedPossibleMoves;
+					// Find possible moves for this cell.
+					var regularPossibleMoves = getRegularPossibleMoves(imgCoordinate, imgPath);
+					var irregularPossibleMoves = getRegularPossibleMoves(imgCoordinate, imgPath, 1);
+					
+					// Apply some rules for suggested moves.
+					var checkedPossibleMoves = getCheckedPossibleMoves(regularPossibleMoves, imgPath, imgCoordinate);
+					var irCheckedPossibleMoves = getCheckedPossibleMoves(irregularPossibleMoves, imgPath, imgCoordinate, 1);
+					
+					if(checkedPossibleMoves['ignoreRegularMoves'] == 1){
+						var finalPossibleMoves = checkedPossibleMoves.concat(irCheckedPossibleMoves);
+					}
+					else if(irCheckedPossibleMoves.length > 0 && checkedPossibleMoves['ignoreRegularMoves'] !== 1){
+						var finalPossibleMoves = irCheckedPossibleMoves;
+					}
+					else{
+						var finalPossibleMoves = checkedPossibleMoves;
+					}
 				}
-
 				// Manipulate each cell that is suggested as a possible move.
 				for(var i=0; i<finalPossibleMoves.length; i++){
 					if ( finalPossibleMoves[i] !=  null){
@@ -228,6 +234,8 @@
 				removeImage(conqueredEnemyPiece);
 
 			}
+			// Forget last clicked path.
+			lastClickedImagePath = '';
 			// Clear styling on suggested moves.
 			clearStyling();
 			// Clear enemy piece variable.
@@ -336,7 +344,7 @@
 		if (enemyCoordinateHorizontal == 0 || enemyCoordinateHorizontal == 7){
 			result = null;
 		}
-		else if(enemyCoordinateVertical == 0 || enemyCoordinateVertical == 7){
+		else if(enemyCoordinateVertical == 0 || enemyCoordinateVertical == 7)  {
 			result = null;
 		}
 		else{
@@ -373,4 +381,20 @@
 	function isNan(array){
 	    return array.join().replace(/,/g,'').length === 0;
 	};
+
+	// Calculate possible moves for a master soldier.
+	function getMasterPossibleMoves(coordinate){
+		var coordinateHorizontal = horizontalTicks.indexOf(coordinate.slice(0,1));
+		var coordinateVertical = verticalTicks.indexOf(coordinate.slice(1,2));
+		var result = [];
+
+		for(var i=0; i<horizontalTicks.length; i++){
+			for(var k=0; k<verticalTicks.length; k++){
+				if(Math.abs(coordinateHorizontal-i) == Math.abs(coordinateVertical-k)){
+					result.push(horizontalTicks[i] + verticalTicks[k]);
+				}
+			}
+		}
+		return result;
+	}
 </script>
